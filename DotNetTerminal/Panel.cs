@@ -80,6 +80,8 @@ namespace DotNetTerminal
             drawCurrentDirectory();
         }
 
+        public string directory { get { return currentDirectory;  } }
+
         public void drawSelectedFileInfo()
         {
             if (selectedIndex == -1) return;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace DotNetTerminal
 {
@@ -15,6 +16,12 @@ namespace DotNetTerminal
         public Panel rightPanel { get; set; }
 
         Panel currentPanel;
+
+        string current_directory;
+
+        string command = "";
+
+        char[] chars = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '\\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ',', '-', '=', '+', ' '};
 
         public Application() 
         {
@@ -39,19 +46,49 @@ namespace DotNetTerminal
 
             currentPanel = leftPanel;
             currentPanel.Focused = true;
+            current_directory = currentPanel.directory;
 
             currentPanel.updateSelected(0);
             while (true)
             {
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.SetCursorPosition(0, Height - 2);
+                
+                log(current_directory + ">");
+                Console.SetCursorPosition(command.Length + current_directory.Length + 1, Height - 2);
+
                 ConsoleKeyInfo key_info = readKey();
                 ConsoleKey key = key_info.Key;
 
+                if (chars.Contains(key_info.KeyChar))
+                {
+                    command += key_info.KeyChar;
+                    log(current_directory + ">"+command);
+                }
+
+                if (key == ConsoleKey.Backspace && command.Length > 0)
+                {
+                    command = command.Substring(0, command.Length - 1);
+                    log(current_directory + ">" + command+" ");
+                }
+
                 if (key == ConsoleKey.Enter)
                 {
-                    log("                                     ");
+                    if (command.Length > 0)
+                    {
+                        if (current_directory[current_directory.Length - 1] != '\\')
+                            current_directory += '\\';
+                        command = command.Trim();
+                        var cmd = current_directory + command;
+                        if (File.Exists(cmd))
+                            System.Diagnostics.Process.Start(current_directory + command);
+                        else
+                            if (command == "exit") break;
+                            else
+                                System.Diagnostics.Process.Start(command);
+                        command = "";
+                    }
+                    log("                                                  ");
                 }
 
                 if (key == ConsoleKey.F10) break;
