@@ -68,26 +68,26 @@ namespace DotNetTerminal
         {
             var info = new FileInfo(files[selectedIndex].FullName);
 
-            Console.SetCursorPosition(1, Height - 2);
+            SetCursorPosition(1, Height - 2);
 
             Console.BackgroundColor = backgroundColor;
             Console.ForegroundColor = foregroundColor;
             Console.Write(info.Name);
 
-            Console.SetCursorPosition(Width - 15, Height - 2);
+            SetCursorPosition(Width - 15, Height - 2);
             Console.Write(info.CreationTime.ToString("dd.MM.yy HH:mm"));
 
             if (IsDirectory(info))
             {
                 string text = " Folder ";
 
-                Console.SetCursorPosition(Width - 15 - text.Length, Height - 2);
+                SetCursorPosition(Width - 15 - text.Length, Height - 2);
                 Console.Write(text);
             }
             else {
                 string file_size = formatSize(info.Length);
 
-                Console.SetCursorPosition(Width - 16 - file_size.Length, Height - 2);
+                SetCursorPosition(Width - 16 - file_size.Length, Height - 2);
                 Console.Write(file_size);
             }
         }
@@ -148,10 +148,10 @@ namespace DotNetTerminal
                 top = index + 2;
             }
 
-            Console.SetCursorPosition(left, top);
+            SetCursorPosition(left, top);
             for (int i = 0; i < max_width; ++i) Console.Write(" ");
 
-            Console.SetCursorPosition(left, top);
+            SetCursorPosition(left, top);
             if (name.Length > max_width) name = name.Substring(0, max_width) + "}";
 
             Console.Write(name);
@@ -172,7 +172,7 @@ namespace DotNetTerminal
 
             string name = " " + info.Name + " ";
 
-            Console.SetCursorPosition(Width / 2 - name.Length / 2, 0);
+            SetCursorPosition(Width / 2 - name.Length / 2, 0);
             Console.Write(name);
 
             Console.BackgroundColor = backgroundColor;
@@ -190,7 +190,7 @@ namespace DotNetTerminal
 
             string files_info = " " + file_size + " in " + fileCount + " files ";
 
-            Console.SetCursorPosition(Width / 2 - files_info.Length / 2, Height - 1);
+            SetCursorPosition(Width / 2 - files_info.Length / 2, Height - 1);
             Console.Write(files_info);
         }
 
@@ -198,9 +198,9 @@ namespace DotNetTerminal
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            Console.SetCursorPosition(Width / 4 - 2, 1);
+            SetCursorPosition(Width / 4 - 2, 1);
             Console.Write("Name");
-            Console.SetCursorPosition(3 * Width / 4 - 2, 1);
+            SetCursorPosition(3 * Width / 4 - 2, 1);
             Console.Write("Name");
         }
 
@@ -230,7 +230,7 @@ namespace DotNetTerminal
             Console.BackgroundColor = backgroundColor;
             for (int i = 0; i < Height; ++i)
             {
-                Console.SetCursorPosition(0, i);
+                SetCursorPosition(0, i);
                 for (int j = 0; j < Width; ++j) Console.Write(" ");
             }
         }
@@ -240,44 +240,46 @@ namespace DotNetTerminal
             Console.BackgroundColor = backgroundColor;
             Console.ForegroundColor = borderColor;
 
-            Console.SetCursorPosition(0, 0);
+            SetCursorPosition(0, 0);
             Console.Write("╔");
-            Console.SetCursorPosition(0, Height - 1);
+            SetCursorPosition(0, Height - 1);
             Console.Write("╚");
             for (int i = 1; i < Width - 1; ++i)
             {
-                Console.SetCursorPosition(i, 0);
+                SetCursorPosition(i, 0);
                 Console.Write("═");
-                Console.SetCursorPosition(i, Height - 1);
+                SetCursorPosition(i, Height - 1);
                 Console.Write("═");
             }
-            Console.SetCursorPosition(Width - 1, 0);
+            SetCursorPosition(Width - 1, 0);
             Console.Write("╗");
-            Console.SetCursorPosition(Width - 1, Height - 1);
+            SetCursorPosition(Width - 1, Height - 1);
             Console.Write("╝");
             for (int i = 1; i < Height - 1; ++i)
             {
-                Console.SetCursorPosition(0, i);
+                SetCursorPosition(0, i);
                 Console.Write("║");
-                Console.SetCursorPosition(Width - 1, i);
+                SetCursorPosition(Width - 1, i);
                 Console.Write("║");
             }
 
             for (int i = 1; i < Height - 3; ++i)
             {
-                Console.SetCursorPosition(Width / 2, i);
+                SetCursorPosition(Width / 2, i);
                 Console.Write("│");
             }
             
             for (int i = 1; i < Width - 1; ++i)
             {
-                Console.SetCursorPosition(i, Height - 3);
+                SetCursorPosition(i, Height - 3);
                 Console.Write("─");
             }
-
-
         }
 
+        void SetCursorPosition(int left, int top)
+        {
+            Console.SetCursorPosition(left + X, top + Y);
+        }
 
     }
 }
