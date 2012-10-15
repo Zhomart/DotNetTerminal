@@ -37,10 +37,10 @@ namespace DotNetTerminal
         {
             draw();
 
-
             currentPanel = leftPanel;
+            currentPanel.Focused = true;
 
-            currentPanel.updateSelected(2);
+            currentPanel.updateSelected(0);
             while (true)
             {
                 Console.BackgroundColor = ConsoleColor.Black;
@@ -53,6 +53,17 @@ namespace DotNetTerminal
                 if (key == ConsoleKey.DownArrow) currentPanel.selectNextFile();
                 if (key == ConsoleKey.LeftArrow) currentPanel.selectLeft();
                 if (key == ConsoleKey.RightArrow) currentPanel.selectRight();
+
+                if (key == ConsoleKey.Tab)
+                {
+                    currentPanel.Focused = false;
+                    currentPanel.updateSelected();
+
+                    currentPanel = currentPanel == leftPanel ? rightPanel : leftPanel;
+
+                    currentPanel.Focused = true;
+                    currentPanel.updateSelected();
+                }
 
                 if (key == ConsoleKey.Enter) currentPanel.Action();
 

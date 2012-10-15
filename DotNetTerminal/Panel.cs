@@ -20,6 +20,8 @@ namespace DotNetTerminal
 
         public bool Visible { get; set; }
 
+        public bool Focused { get; set; }
+
         string currentDirectory;
 
         public int Width { get { return app.Width / 2;  } }
@@ -38,6 +40,7 @@ namespace DotNetTerminal
             Y = 0;
 
             Visible = true;
+            Focused = false;
 
             positions = new Dictionary<string, int>();
 
@@ -170,7 +173,7 @@ namespace DotNetTerminal
             if (index == -1|| index >= files.Count) return;
             int max_count = 18; // in column
 
-            if (index == selectedIndex)
+            if (index == selectedIndex && Focused)
             {
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
             }
@@ -188,7 +191,7 @@ namespace DotNetTerminal
 
             if (info.Attributes.HasFlag(FileAttributes.Hidden) || info.Attributes.HasFlag(FileAttributes.System))
             {
-                if (index == selectedIndex)
+                if (index == selectedIndex && Focused)
                     Console.ForegroundColor = ConsoleColor.Gray;
                 else
                     Console.ForegroundColor = ConsoleColor.DarkCyan;
