@@ -14,6 +14,8 @@ namespace DotNetTerminal
         public Panel leftPanel { get; set; }
         public Panel rightPanel { get; set; }
 
+        Panel currentPanel;
+
         public Application() 
         {
             Width = 80;
@@ -21,9 +23,10 @@ namespace DotNetTerminal
 
             Console.SetWindowSize(Width, Height);
 
-            leftPanel = new Panel(this);
+            leftPanel = new Panel(this, "C:\\");
+            rightPanel = new Panel(this, "C:\\soft");
 
-            leftPanel.X = Width / 2;
+            rightPanel.X = Width / 2;
         }
 
         public ConsoleKeyInfo readKey() {
@@ -33,8 +36,28 @@ namespace DotNetTerminal
         public void run()
         {
             draw();
-            Console.SetCursorPosition(0, Height - 2);
-            readKey();
+
+
+            currentPanel = leftPanel;
+
+            currentPanel.updateSelected(1);
+            while (true)
+            {
+
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.SetCursorPosition(0, Height - 2);
+                ConsoleKeyInfo key_info = readKey();
+                ConsoleKey key = key_info.Key;
+
+                if (key == ConsoleKey.UpArrow) currentPanel.selectPrevFile();
+                if (key == ConsoleKey.DownArrow) currentPanel.selectNextFile();
+
+                if (key == ConsoleKey.Enter) currentPanel.Action();
+
+                if (key == ConsoleKey.F10) break;
+                if (key == ConsoleKey.Escape) break; // Test only
+            }
         }
 
         void drawFooterMenu(string key, string text)
@@ -71,6 +94,15 @@ namespace DotNetTerminal
             drawFooter();
 
             leftPanel.draw();
+            rightPanel.draw();
+        }
+
+        public void log(string s)
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.SetCursorPosition(0, Height - 2);
+            Console.Write(s);
         }
     }
 }
