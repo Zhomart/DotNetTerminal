@@ -31,7 +31,13 @@ namespace DotNetTerminal
         public void run()
         {
             draw();
+            Console.SetCursorPosition(0, Height - 2);
             readKey();
+        }
+
+        void drawFooter()
+        {
+            Console.SetCursorPosition(0, Height - 1);
         }
 
         void draw()

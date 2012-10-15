@@ -29,14 +29,18 @@ namespace DotNetTerminal
         public void draw()
         {
             fillBackground();
-
             drawBorders();
+            drawHeaders();
 
+        }
+
+        void drawHeaders()
+        {
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             Console.SetCursorPosition(Width / 4 - 2, 1);
             Console.Write("Name");
-            Console.SetCursorPosition(3*Width / 4 - 2, 1);
+            Console.SetCursorPosition(3 * Width / 4 - 2, 1);
             Console.Write("Name");
         }
 
@@ -92,6 +96,7 @@ namespace DotNetTerminal
 
 
         }
+
 
     }
 }
