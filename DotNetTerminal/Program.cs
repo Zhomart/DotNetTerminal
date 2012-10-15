@@ -10,7 +10,18 @@ namespace DotNetTerminal
     {
         static void Main(string[] args)
         {
-            new Application().run();
+            try
+            {
+                new Application().run();
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.Clear();
+                Console.WriteLine(e);
+                Console.ReadKey(false);
+            }
         }
     }
 }

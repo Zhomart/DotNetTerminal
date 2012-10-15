@@ -40,10 +40,9 @@ namespace DotNetTerminal
 
             currentPanel = leftPanel;
 
-            currentPanel.updateSelected(1);
+            currentPanel.updateSelected(2);
             while (true)
             {
-
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.SetCursorPosition(0, Height - 2);
@@ -52,6 +51,8 @@ namespace DotNetTerminal
 
                 if (key == ConsoleKey.UpArrow) currentPanel.selectPrevFile();
                 if (key == ConsoleKey.DownArrow) currentPanel.selectNextFile();
+                if (key == ConsoleKey.LeftArrow) currentPanel.selectLeft();
+                if (key == ConsoleKey.RightArrow) currentPanel.selectRight();
 
                 if (key == ConsoleKey.Enter) currentPanel.Action();
 

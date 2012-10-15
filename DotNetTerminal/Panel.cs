@@ -27,7 +27,7 @@ namespace DotNetTerminal
 
         List<FileSystemInfo> files;
         public int selectedIndex = -1;
-        int showStartIndex = 0;
+        int showStartIndex = 1;
 
         Dictionary<string, int> positions;
 
@@ -72,6 +72,8 @@ namespace DotNetTerminal
         public void drawSelectedFileInfo()
         {
             if (selectedIndex == -1) return;
+
+            if (selectedIndex >= files.Count) return;
 
             var info = new FileInfo(files[selectedIndex].FullName);
 
@@ -127,6 +129,17 @@ namespace DotNetTerminal
             int old_selected = selectedIndex;
             selectedIndex = index;
 
+            if (selectedIndex >= showStartIndex + 36)
+            {
+                showStartIndex = selectedIndex - 36 + 1;
+                draw();
+            }
+            if (selectedIndex < showStartIndex)
+            {
+                showStartIndex = selectedIndex;
+                draw();
+            }
+
             drawSelectedFileInfo();
             drawFile(selectedIndex);
             drawFile(old_selected);
@@ -142,9 +155,19 @@ namespace DotNetTerminal
             updateSelected(selectedIndex - 1);
         }
 
+        public void selectLeft()
+        {
+            updateSelected(selectedIndex - 18);
+        }
+
+        public void selectRight()
+        {
+            updateSelected(selectedIndex + 18);
+        }
+
         public void drawFile(int index)
         {
-            if (index == -1) return;
+            if (index == -1|| index >= files.Count) return;
             int max_count = 18; // in column
 
             if (index == selectedIndex)
@@ -182,12 +205,12 @@ namespace DotNetTerminal
             {
                 max_width = 18;
                 left = Width / 2 + 1;
-                top = index - max_count + 2;
+                top = index - max_count + 2 - showStartIndex;
             }
             else
             {
                 left = 1;
-                top = index + 2;
+                top = index + 2 - showStartIndex;
             }
 
             SetCursorPosition(left, top);
@@ -201,8 +224,10 @@ namespace DotNetTerminal
 
         public void drawCurrentDirectory()
         {
-            for (int i = 0; i < files.Count;++i )
-                drawFile(i);
+            int max_count = 18;
+            for (int i = showStartIndex; i < Math.Min(files.Count, showStartIndex + max_count * 2); ++i)
+                if (i < Math.Min(files.Count, showStartIndex + max_count * 2) && i >= showStartIndex)
+                    drawFile(i);
         }
 
         public void changeDirectory(string directory_name)
@@ -218,21 +243,22 @@ namespace DotNetTerminal
 
             var info = new DirectoryInfo(directory_name);
 
-            if (positions.ContainsKey(currentDirectory))
-            {
-                selectedIndex = positions[currentDirectory];
-                showStartIndex = 0;
-            }
-            else {
-                selectedIndex = 0;
-                showStartIndex = 0;
-            }
-
             sortFiles();
             
             if (info.Parent != null)
             {
                 files.Insert(0, info.Parent);
+            }
+
+            if (positions.ContainsKey(currentDirectory))
+            {
+                showStartIndex = 0;
+                updateSelected(positions[currentDirectory]);
+            }
+            else
+            {
+                showStartIndex = 0;
+                updateSelected(0);
             }
 
             draw();
@@ -254,7 +280,9 @@ namespace DotNetTerminal
 
             string name = " " + info.Name + " ";
 
-            SetCursorPosition(Width / 2 - name.Length / 2, 0);
+            if (name.Length > Width - 2) name = name.Substring(0, Width - 2);
+
+            SetCursorPosition(Math.Max(Width / 2 - name.Length / 2, 0), 0);
             Console.Write(name);
 
             Console.BackgroundColor = backgroundColor;
@@ -272,7 +300,9 @@ namespace DotNetTerminal
 
             string files_info = " " + file_size + " in " + fileCount + " files ";
 
-            SetCursorPosition(Width / 2 - files_info.Length / 2, Height - 1);
+            if (files_info.Length > Width - 2) files_info = files_info.Substring(0, Width - 2);
+
+            SetCursorPosition(Math.Max(Width / 2 - files_info.Length / 2, 0), Height - 1);
             Console.Write(files_info);
         }
 
