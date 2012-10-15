@@ -14,6 +14,9 @@ namespace DotNetTerminal
         public int X { get; set; }
         public int Y { get; set; }
 
+        string[] drives;
+        int selected_drive;
+
         ConsoleColor backgroundColor = ConsoleColor.Blue;
         ConsoleColor borderColor = ConsoleColor.Cyan;
         ConsoleColor foregroundColor = ConsoleColor.Cyan;
@@ -62,6 +65,11 @@ namespace DotNetTerminal
 
         public void draw()
         {
+            if (!Visible)
+            {
+                clear();
+                return;
+            }
             fillBackground();
             drawBorders();
             drawHeaders();
@@ -267,6 +275,16 @@ namespace DotNetTerminal
             draw();
         }
 
+        public void clear()
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            for (int i = 0; i < Height; ++i)
+            {
+                SetCursorPosition(0, i);
+                for (int j = 0; j < Width; ++j) Console.Write(" ");
+            }
+        }
+
         public void Action()
         {
             var file_info = files[selectedIndex];
@@ -396,5 +414,121 @@ namespace DotNetTerminal
             Console.SetCursorPosition(left + X, top + Y);
         }
 
+        public void SelectDrive()
+        {
+            Console.CursorVisible = false;
+            drives = Environment.GetLogicalDrives();
+            selected_drive = 0;
+            
+            DrawSelectDriveBox();
+
+            drawDrives();
+
+            while (true)
+            {
+                var key_info = app.readKey();
+                var key = key_info.Key;
+
+                if (key == ConsoleKey.UpArrow)
+                {
+                    selected_drive = Math.Max(selected_drive - 1, 0);
+                    drawDrives();
+                }
+                if (key == ConsoleKey.DownArrow)
+                {
+                    selected_drive = Math.Min(selected_drive + 1, drives.Length - 1);
+                    drawDrives();
+                }
+
+                if (key == ConsoleKey.Enter)
+                {
+                    changeDirectory(drives[selected_drive]);
+                    break;
+                }
+
+                if (key == ConsoleKey.Escape)
+                {
+                    draw();
+                    break;
+                }
+            }
+            Console.CursorVisible = true;
+        }
+
+        void drawDrives()
+        {
+            int w = 30;
+            int h = drives.Length + 4;
+
+            for (int i = 0; i < drives.Length; ++i)
+            {
+                if (i == selected_drive)
+                {
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+                else
+                {
+                    Console.BackgroundColor = ConsoleColor.DarkCyan;
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+
+                SetCursorPosition(6, i + Height / 2 - h / 2 + 2);
+                for (int j = 0; j < w - 6; ++j) Console.Write(" ");
+                    SetCursorPosition(6, i + Height / 2 - h / 2 + 2);
+                Console.Write(drives[i]);
+            }
+        }
+
+        void DrawSelectDriveBox()
+        {
+            int w = 30;
+            int h = drives.Length + 4;
+
+            Console.BackgroundColor = ConsoleColor.DarkCyan;
+            Console.ForegroundColor = ConsoleColor.White;
+
+            for (int i = 0; i < w; ++i)
+                for (int j = 0; j < h; ++j)
+                {
+                    SetCursorPosition(3 + i, Height / 2 - h / 2 + j);
+                    Console.Write(" ");
+                }
+
+            for (int i = 0; i < w; ++i)
+            {
+                SetCursorPosition(3 + i, Height / 2 - h / 2 + 0);
+                Console.Write(" ");
+                SetCursorPosition(3 + i, Height / 2 - h / 2 + h - 1);
+                Console.Write(" ");
+            }
+
+            SetCursorPosition(3, Height / 2 - h / 2 + 1);
+            Console.Write(" ╔");
+            SetCursorPosition(3 + w - 2, Height / 2 - h / 2 + 1);
+            Console.Write("╗ ");
+
+            SetCursorPosition(3, Height / 2 - h / 2 + h - 2);
+            Console.Write(" ╚");
+            SetCursorPosition(3 + w - 2, Height / 2 - h / 2 + h - 2);
+            Console.Write("╝ ");
+
+            for (int i = 2; i < w - 2; ++i)
+            {
+                SetCursorPosition(3 + i, Height / 2 - h / 2 + 1);
+                Console.Write("═");
+                SetCursorPosition(3 + i, Height / 2 - h / 2 + h - 2);
+                Console.Write("═");
+            }
+
+            for (int i = 2; i < h - 2; ++i)
+            {
+                SetCursorPosition(4, Height / 2 - h / 2 + i);
+                Console.Write("║");
+                SetCursorPosition(3 + w - 2, Height / 2 - h / 2 + i);
+                Console.Write("║");
+            }
+
+        }
     }
 }
