@@ -22,6 +22,8 @@ namespace DotNetTerminal
             Console.SetWindowSize(Width, Height);
 
             leftPanel = new Panel(this);
+
+            leftPanel.X = Width / 2;
         }
 
         public ConsoleKeyInfo readKey() {
@@ -35,13 +37,39 @@ namespace DotNetTerminal
             readKey();
         }
 
+        void drawFooterMenu(string key, string text)
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write(key);
+
+            Console.BackgroundColor = ConsoleColor.DarkCyan;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.Write(text);
+        }
+
         void drawFooter()
         {
             Console.SetCursorPosition(0, Height - 1);
+
+            drawFooterMenu("1", "Left  ");
+            drawFooterMenu(" 2", "Right ");
+            drawFooterMenu(" 3", "View  ");
+            drawFooterMenu(" 4", "Edit  ");
+            drawFooterMenu(" 5", "Copy  ");
+            drawFooterMenu(" 6", "Move  ");
+            drawFooterMenu(" 7", "MkDir ");
+            drawFooterMenu(" 8", "Find  ");
+            drawFooterMenu(" 9", "Info  ");
+            drawFooterMenu(" 10", "Quit ");
+
+
         }
 
         void draw()
         {
+            drawFooter();
+
             leftPanel.draw();
         }
     }
