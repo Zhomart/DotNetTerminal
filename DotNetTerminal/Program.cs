@@ -10,6 +10,7 @@ namespace DotNetTerminal
     {
         static void Main(string[] args)
         {
+            new Application().run();
         }
     }
 }
