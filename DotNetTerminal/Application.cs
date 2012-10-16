@@ -31,7 +31,7 @@ namespace DotNetTerminal
             Console.SetWindowSize(Width, Height);
 
             leftPanel = new Panel(this, "C:\\");
-            rightPanel = new Panel(this, "C:\\soft");
+            rightPanel = new Panel(this, "C:\\");
 
             rightPanel.X = Width / 2;
         }
@@ -42,20 +42,24 @@ namespace DotNetTerminal
 
         public void run()
         {
-            draw();
-
-            currentPanel = leftPanel;
+            leftPanel.Visible = false;
+            currentPanel = rightPanel;
             currentPanel.Focused = true;
             current_directory = currentPanel.directory;
+
+            draw();
 
             currentPanel.updateSelected(0);
             while (true)
             {
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.ForegroundColor = ConsoleColor.White;
-                
-                log(current_directory + ">");
-                Console.SetCursorPosition(command.Length + current_directory.Length + 1, Height - 2);
+
+                var cdir = current_directory;
+                if (current_directory.Length > 10)
+                    cdir = current_directory.Substring(0, 3) + "..." + current_directory.Substring(current_directory.Length - 6, 6);
+                log(cdir + ">");
+                Console.SetCursorPosition(command.Length + cdir.Length + 1, Height - 2);
 
                 ConsoleKeyInfo key_info = readKey();
                 ConsoleKey key = key_info.Key;
@@ -63,36 +67,46 @@ namespace DotNetTerminal
                 if (chars.Contains(key_info.KeyChar))
                 {
                     command += key_info.KeyChar;
-                    log(current_directory + ">"+command);
+                    log(cdir + ">"+command);
+                    continue;
                 }
 
                 if (key == ConsoleKey.Backspace && command.Length > 0)
                 {
                     command = command.Substring(0, command.Length - 1);
-                    log(current_directory + ">" + command+" ");
+                    log(cdir + ">" + command+" ");
+                    continue;
                 }
 
                 if (key == ConsoleKey.Enter)
                 {
                     if (command.Length > 0)
                     {
-                        if (current_directory[current_directory.Length - 1] != '\\')
-                            current_directory += '\\';
+                        cdir = current_directory;
+                        if (cdir[cdir.Length - 1] != '\\')
+                            cdir += '\\';
                         command = command.Trim();
-                        var cmd = current_directory + command;
-                        if (File.Exists(cmd))
-                            System.Diagnostics.Process.Start(current_directory + command);
-                        else
-                            if (command == "exit") break;
+                        var cmd = cdir + command;
+                        try
+                        {
+                            if (File.Exists(cmd))
+                                System.Diagnostics.Process.Start(cmd);
                             else
-                                System.Diagnostics.Process.Start(command);
+                                if (command == "exit") break;
+                                else
+                                    System.Diagnostics.Process.Start(command);
+                        }
+                        catch (Exception ex)
+                        { 
+                        }
                         command = "";
+                        log("                                                   ");
+                        continue;
                     }
-                    log("                                                  ");
                 }
 
                 if (key == ConsoleKey.F10) break;
-                if (key == ConsoleKey.Escape) break; // Test only
+                // if (key == ConsoleKey.Escape) break; // Test only --------------------
 
                 if (key == ConsoleKey.F1 && (key_info.Modifiers == ConsoleModifiers.Alt || key_info.Modifiers == null))
                     leftPanel.SelectDrive();
@@ -132,8 +146,8 @@ namespace DotNetTerminal
                 if (!leftPanel.Visible && !rightPanel.Visible) currentPanel = null;
                 if (null == currentPanel) continue;
 
-                if (key == ConsoleKey.F3) log("not implemented");
-                if (key == ConsoleKey.F4) log("not implemented");
+                if (key == ConsoleKey.F3) currentPanel.OpenEdit();
+                if (key == ConsoleKey.F4) currentPanel.OpenEdit();
                 if (key == ConsoleKey.F5) log("not implemented");
                 if (key == ConsoleKey.F6) log("not implemented");
                 if (key == ConsoleKey.F7) log("not implemented");
@@ -142,21 +156,36 @@ namespace DotNetTerminal
 
                 if (key == ConsoleKey.UpArrow) currentPanel.selectPrevFile();
                 if (key == ConsoleKey.DownArrow) currentPanel.selectNextFile();
-                if (key == ConsoleKey.LeftArrow) currentPanel.selectLeft();
-                if (key == ConsoleKey.RightArrow) currentPanel.selectRight();
+                if (key == ConsoleKey.LeftArrow || key == ConsoleKey.PageUp) currentPanel.selectLeft();
+                if (key == ConsoleKey.RightArrow || key == ConsoleKey.PageDown) currentPanel.selectRight();
+                if (key == ConsoleKey.Home) currentPanel.updateSelected(0);
+                if (key == ConsoleKey.End) currentPanel.updateSelected(currentPanel.AllFiles.Count - 1);
 
                 if (key == ConsoleKey.Tab)
                 {
-                    currentPanel.Focused = false;
-                    currentPanel.updateSelected();
+                    if (currentPanel == leftPanel || currentPanel == rightPanel)
+                    {
+                        if (!(currentPanel == leftPanel ? rightPanel : leftPanel).Visible) continue;
 
-                    currentPanel = currentPanel == leftPanel ? rightPanel : leftPanel;
+                        currentPanel.Focused = false;
+                        currentPanel.updateSelected();
 
-                    currentPanel.Focused = true;
-                    currentPanel.updateSelected();
+                        currentPanel = currentPanel == leftPanel ? rightPanel : leftPanel;
+
+                        currentPanel.Focused = true;
+                        currentPanel.updateSelected();
+
+                        current_directory = currentPanel.directory;
+                    }
                 }
 
-                if (key == ConsoleKey.Enter) currentPanel.Action();
+                if (key == ConsoleKey.Enter)
+                {
+                    currentPanel.Action();
+                    current_directory = currentPanel.directory;
+                    log("                                                  ");
+                    command = "";
+                }
             }
         }
 

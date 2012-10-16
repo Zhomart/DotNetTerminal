@@ -291,7 +291,31 @@ namespace DotNetTerminal
         {
             var file_info = files[selectedIndex];
 
-            if (IsDirectory(file_info)) changeDirectory(file_info.FullName);
+            if (IsDirectory(file_info))
+            {
+                changeDirectory(file_info.FullName);
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(file_info.FullName);
+            }
+            catch (Exception ex) { }
+
+        }
+
+        public void OpenEdit()
+        {
+            var file_info = files[selectedIndex];
+
+            try
+            {
+                System.Diagnostics.Process.Start("notepad", file_info.FullName);
+            }
+            catch (Exception ex) {
+                app.log(ex.Message);
+            }
         }
 
         void drawDirectoryInfo()
@@ -369,6 +393,8 @@ namespace DotNetTerminal
                 for (int j = 0; j < Width; ++j) Console.Write(" ");
             }
         }
+
+        public List<FileSystemInfo> AllFiles { get { return files; } }
 
         void drawBorders()
         {
