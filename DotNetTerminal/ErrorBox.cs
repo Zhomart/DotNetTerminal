@@ -12,12 +12,14 @@ namespace DotNetTerminal
 
         public string Text { get; set; }
 
-        public ErrorBox(Application app)
+        public ErrorBox(Application app) : this(app, app.Width - 10)
+        { }
+
+        public ErrorBox(Application app, int width)
             : base(app, "Error")
         {
-
-            Width = app.Width - 10;
-            Height = 20;
+            Width = width;
+            Height = 8;
             X = app.Width / 2 - Width / 2;
             Y = app.Height / 2 - Height / 2;
 

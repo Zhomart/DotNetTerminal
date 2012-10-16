@@ -26,6 +26,7 @@ namespace DotNetTerminal
         YesNoBox exit_menu;
         MakeFolderBox mkdir_menu;
         AboutBox about_box;
+        ErrorBox large_error_box;
         ErrorBox error_box;
 
         public char[] chars = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '\\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ',', '-', '=', '+', ' '};
@@ -57,7 +58,9 @@ namespace DotNetTerminal
 
             about_box = new AboutBox(this);
 
-            error_box = new ErrorBox(this);
+            large_error_box = new ErrorBox(this);
+
+            error_box = new ErrorBox(this, 40);
         }
 
         public ConsoleKeyInfo readKey() {
@@ -188,10 +191,10 @@ namespace DotNetTerminal
                     case ConsoleKey.F4:
                         currentPanel.OpenEdit();
                         break;
-                    case ConsoleKey.F5: log("         not implemented"); break;
-                    case ConsoleKey.F6: log("         not implemented"); break;
+                    case ConsoleKey.F5: error_box.run("Not Implemented"); break;
+                    case ConsoleKey.F6: error_box.run("Not Implemented"); break;
                     case ConsoleKey.F7: if (currentPanel != null)mkdir_menu.run(currentPanel.directory); break;
-                    case ConsoleKey.F8: log("         not implemented"); break;
+                    case ConsoleKey.F8: error_box.run("Not Implemented"); break;
                     case ConsoleKey.F9: about_box.run(); break;
                     case ConsoleKey.UpArrow: currentPanel.selectPrevFile(); break;
                     case ConsoleKey.DownArrow: currentPanel.selectNextFile(); break;
@@ -238,7 +241,7 @@ namespace DotNetTerminal
                 }
                 catch (Exception ex)
                 {
-                    error_box.run(ex.ToString());
+                    large_error_box.run(ex.ToString());
                 }
             }
         }
