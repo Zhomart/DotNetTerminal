@@ -1,4 +1,4 @@
-﻿# DNT - DotNetTerminal
+# DNT - DotNetTerminal
 
 ## Overview
 DNT is file manager written on .NET 4.0
