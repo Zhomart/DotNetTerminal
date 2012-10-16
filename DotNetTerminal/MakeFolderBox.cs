@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace DotNetTerminal
 {
     class MakeFolderBox : Box
     {
         public bool Running { get; set; }
+
+        public string Name { get; set; }
+
+        public string Path { get; set; }
 
         public MakeFolderBox(Application app)
             : base(app, "Make folder")
@@ -20,13 +25,17 @@ namespace DotNetTerminal
 
             backgroundColor = ConsoleColor.Gray;
             borderColor = ConsoleColor.Black;
+
+            Name = "";
         }
 
-        public void run()
+        public void run(string path)
         {
-            Console.CursorVisible = false;
+            this.Path = path;
 
             Running = true;
+            
+            Name = "";
 
             draw();
             while (Running)
@@ -36,21 +45,37 @@ namespace DotNetTerminal
 
                 if (key == ConsoleKey.Escape) break;
 
+                if (app.chars.Contains(key_info.KeyChar))
+                {
+                    if (Name.Length > 20) continue;
+                    Name += key_info.KeyChar;
+                    drawInputBox();
+                    continue;
+                }
+
                 switch (key)
                 {
                     case ConsoleKey.Enter:
                         Running = false;
                         action(key_info);
                         break;
+                    case ConsoleKey.Backspace:
+                        if (Name.Length > 0)
+                        {
+                            Name = Name.Substring(0, Name.Length - 1);
+                            drawInputBox();
+                        }
+                        break;
                 }
 
             }
             app.DrawPanels();
-            Console.CursorVisible = true;
         }
 
         void action(ConsoleKeyInfo info)
         {
+            Directory.CreateDirectory(Path + "\\" + Name);
+            app.currentPanel.reloadFiles();
         }
 
         void drawText()
@@ -83,6 +108,10 @@ namespace DotNetTerminal
                     SetCursorPosition(i, 3);
                     Console.Write(" ");
                 }
+
+                SetCursorPosition(3, 3);
+                Console.Write(Name);
+                SetCursorPosition(3 + Name.Length, 3);
             }
         }
 

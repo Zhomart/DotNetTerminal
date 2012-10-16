@@ -15,7 +15,7 @@ namespace DotNetTerminal
         public Panel leftPanel { get; set; }
         public Panel rightPanel { get; set; }
 
-        Panel currentPanel;
+        public Panel currentPanel;
 
         public object locker = new object();
 
@@ -27,7 +27,7 @@ namespace DotNetTerminal
         MakeFolderBox mkdir_menu;
         AboutBox about_box;
 
-        char[] chars = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '\\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ',', '-', '=', '+', ' '};
+        public char[] chars = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '\\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ',', '-', '=', '+', ' '};
 
         public Application() 
         {
@@ -178,7 +178,7 @@ namespace DotNetTerminal
                         break;
                     case ConsoleKey.F5: log("         not implemented"); break;
                     case ConsoleKey.F6: log("         not implemented"); break;
-                    case ConsoleKey.F7: mkdir_menu.run(); break;
+                    case ConsoleKey.F7: if (currentPanel != null)mkdir_menu.run(currentPanel.directory); break;
                     case ConsoleKey.F8: log("         not implemented"); break;
                     case ConsoleKey.F9: about_box.run(); break;
                     case ConsoleKey.UpArrow: currentPanel.selectPrevFile(); break;
