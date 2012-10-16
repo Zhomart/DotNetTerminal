@@ -17,6 +17,8 @@ namespace DotNetTerminal
 
         Panel currentPanel;
 
+        public object locker = new object();
+
         string current_directory;
 
         string command = "";
