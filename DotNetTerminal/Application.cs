@@ -24,6 +24,7 @@ namespace DotNetTerminal
         string command = "";
 
         YesNoBox exit_menu;
+        MakeFolderBox mkdir_menu;
 
         char[] chars = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '\\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ',', '-', '=', '+', ' '};
 
@@ -43,6 +44,7 @@ namespace DotNetTerminal
 
             exit_menu.YesPressed = delegate(ConsoleKeyInfo info) { Environment.Exit(0); };
 
+            mkdir_menu = new MakeFolderBox(this);
         }
 
         public ConsoleKeyInfo readKey() {
@@ -173,7 +175,7 @@ namespace DotNetTerminal
                         break;
                     case ConsoleKey.F5: log("         not implemented"); break;
                     case ConsoleKey.F6: log("         not implemented"); break;
-                    case ConsoleKey.F7: log("         not implemented"); break;
+                    case ConsoleKey.F7: mkdir_menu.run(); break;
                     case ConsoleKey.F8: log("         not implemented"); break;
                     case ConsoleKey.F9: log("         not implemented"); break;
                     case ConsoleKey.UpArrow: currentPanel.selectPrevFile(); break;

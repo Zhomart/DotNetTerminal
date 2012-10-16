@@ -44,6 +44,7 @@
     <Compile Include="Application.cs" />
     <Compile Include="Box.cs" />
     <Compile Include="Finder.cs" />
+    <Compile Include="MakeFolderBox.cs" />
     <Compile Include="Panel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
