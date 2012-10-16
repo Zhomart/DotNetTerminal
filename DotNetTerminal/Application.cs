@@ -21,15 +21,21 @@ namespace DotNetTerminal
 
         string current_directory;
 
-        string command = "";
+        string command;
 
         YesNoBox exit_menu;
         MakeFolderBox mkdir_menu;
         AboutBox about_box;
+        ErrorBox error_box;
 
         public char[] chars = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '\\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ',', '-', '=', '+', ' '};
 
         public Application() 
+        {
+            Init();
+        }
+
+        void Init()
         {
             Width = 80;
             Height = 25;
@@ -38,6 +44,8 @@ namespace DotNetTerminal
 
             leftPanel = new Panel(this, "C:\\");
             rightPanel = new Panel(this, "C:\\");
+
+            command = "";
 
             rightPanel.X = Width / 2;
 
@@ -48,6 +56,8 @@ namespace DotNetTerminal
             mkdir_menu = new MakeFolderBox(this);
 
             about_box = new AboutBox(this);
+
+            error_box = new ErrorBox(this);
         }
 
         public ConsoleKeyInfo readKey() {
@@ -60,7 +70,7 @@ namespace DotNetTerminal
             rightPanel.draw();
         }
 
-        public void run()
+        void run()
         {
             leftPanel.Visible = false;
             currentPanel = rightPanel;
@@ -70,6 +80,8 @@ namespace DotNetTerminal
             draw();
 
             currentPanel.updateSelected(0);
+
+            Console.SetCursorPosition(0, 0);
 
             while (true)
             {
@@ -211,6 +223,22 @@ namespace DotNetTerminal
                     log("                                                  ");
                     command = "";
                         break;
+                }
+            }
+        }
+
+        public void secureRun()
+        {
+            while (true)
+            {
+                try
+                {
+                    Init();
+                    run();
+                }
+                catch (Exception ex)
+                {
+                    error_box.run(ex.ToString());
                 }
             }
         }

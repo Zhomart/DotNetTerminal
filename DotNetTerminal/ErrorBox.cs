@@ -16,13 +16,23 @@ namespace DotNetTerminal
             : base(app, "Error")
         {
 
-            Width = 60;
-            Height = 6;
+            Width = app.Width - 10;
+            Height = 20;
             X = app.Width / 2 - Width / 2;
             Y = app.Height / 2 - Height / 2;
 
-            backgroundColor = ConsoleColor.Gray;
-            borderColor = ConsoleColor.Black;
+            backgroundColor = ConsoleColor.DarkRed;
+            borderColor = ConsoleColor.White;
+        }
+
+        int calc_lines_of_text()
+        {
+            int lines = 0;
+            var chars_in_line = Width - 6;
+            foreach (var line_text in Text.Split('\n'))
+                for (int i = 0; i < line_text.Length; i += chars_in_line)
+                    drawLine(line_text.Substring(i, Math.Min(chars_in_line, line_text.Length - i)), lines++);
+            return lines;
         }
 
         public void run(string text)
@@ -30,6 +40,8 @@ namespace DotNetTerminal
             Console.CursorVisible = false;
             
             Text = text;
+
+            Height = Math.Min(calc_lines_of_text() + 6, app.Height - 4);
 
             Running = true;
 
@@ -69,7 +81,16 @@ namespace DotNetTerminal
                 Console.BackgroundColor = backgroundColor;
                 Console.ForegroundColor = borderColor;
 
-                drawLine(Text, 0);
+                var lines = Text.Split('\n');
+                int line = 0;
+                int chars_in_line = Width - 6;
+                foreach (var line_text in lines)
+                {
+                    if (line > Height - 7) break;
+
+                    for (int i = 0; i < line_text.Length; i += chars_in_line)
+                        drawLine(line_text.Substring(i, Math.Min(chars_in_line, line_text.Length - i)), line++);
+                }
             }
         }
 
