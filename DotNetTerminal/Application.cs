@@ -76,6 +76,11 @@ namespace DotNetTerminal
             rightPanel.updateSelected();
         }
 
+        public void ShowError(string s)
+        {
+            error_box.run(s);
+        }
+
         void run()
         {
             leftPanel.Visible = true;
@@ -94,14 +99,7 @@ namespace DotNetTerminal
                 // Scroll up
                 Console.SetCursorPosition(0, 0);
 
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.White;
-
-                var cdir = current_directory;
-                if (current_directory.Length > 10)
-                    cdir = current_directory.Substring(0, 3) + "..." + current_directory.Substring(current_directory.Length - 6, 6);
-                write_cmd(cdir + ">");
-                Console.SetCursorPosition(command.Length + cdir.Length + 1, Height - 2);
+                write_cmd();
 
                 ConsoleKeyInfo key_info = readKey();
                 ConsoleKey key = key_info.Key;
@@ -109,14 +107,14 @@ namespace DotNetTerminal
                 if (chars.Contains(key_info.KeyChar))
                 {
                     command += key_info.KeyChar;
-                    write_cmd(cdir + ">"+command);
+                    write_cmd();
                     continue;
                 }
 
                 if (key == ConsoleKey.Backspace && command.Length > 0)
                 {
                     command = command.Substring(0, command.Length - 1);
-                    write_cmd(cdir + ">" + command+" ");
+                    write_cmd();
                     continue;
                 }
 
@@ -125,25 +123,8 @@ namespace DotNetTerminal
                     case ConsoleKey.Enter:
                         if (command.Length > 0)
                         {
-                            cdir = current_directory;
-                            if (cdir[cdir.Length - 1] != '\\')
-                                cdir += '\\';
-                            command = command.Trim();
-                            var cmd = cdir + command;
-                            try
-                            {
-                                if (File.Exists(cmd))
-                                    System.Diagnostics.Process.Start(cmd);
-                                else
-                                    if (command == "exit") break;
-                                    else
-                                        System.Diagnostics.Process.Start(command);
-                            }
-                            catch (Exception ex)
-                            {
-                            }
-                            command = "";
-                            write_cmd("                                                   ");
+                            action();
+                            write_cmd();
                             continue;
                         }
                         break;
@@ -151,12 +132,12 @@ namespace DotNetTerminal
                         exit_menu.run();
                         break;
                     case ConsoleKey.F1:
-                        if (key_info.Modifiers == ConsoleModifiers.Alt) leftPanel.SelectDrive();
-                        if (key_info.Modifiers == ConsoleModifiers.Control) TogglePanel(leftPanel);
+                        if (key_info.Modifiers == ConsoleModifiers.Control) { TogglePanel(leftPanel); continue; }
+                        leftPanel.SelectDrive();
                         break;
                     case ConsoleKey.F2:
-                        if (key_info.Modifiers == ConsoleModifiers.Alt) rightPanel.SelectDrive();
-                        if (key_info.Modifiers == ConsoleModifiers.Control) TogglePanel(rightPanel);
+                        if (key_info.Modifiers == ConsoleModifiers.Alt) { rightPanel.SelectDrive(); continue; }
+                        TogglePanel(rightPanel);
                         break;
                 }
 
@@ -191,11 +172,54 @@ namespace DotNetTerminal
                     case ConsoleKey.Enter:
                         currentPanel.Action();
                         current_directory = currentPanel.directory;
-                        write_cmd("                                                  ");
+                        write_cmd();
                         command = "";
                         break;
                 }
             }
+        }
+
+        void action()
+        {
+            var cdir = current_directory;
+            command = command.Trim();
+            if (cdir[cdir.Length - 1] != '\\') cdir += '\\';
+            var cmd = cdir + command;
+            try
+            {
+                if (File.Exists(cmd))
+                    System.Diagnostics.Process.Start(cmd);
+                else
+                    if (command == "exit") Environment.Exit(0);
+                    else
+                        System.Diagnostics.Process.Start(command);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.Message);
+            }
+            command = "";
+        }
+
+        public void write_cmd()
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+
+            var cdir = current_directory;
+            if (current_directory.Length > 12)
+                cdir = current_directory.Substring(0, 3) + "..." + current_directory.Substring(current_directory.Length - 7, 7);
+
+            var text = cdir + ">" + command;
+            int max_length = 80 - 1;
+            if (text.Length > max_length)
+                text = text.Substring(text.Length - max_length, max_length);
+            Console.SetCursorPosition(0, Height - 2);
+            Console.Write(text);
+
+            for (int i = text.Length; i < Width; ++i) Console.Write(" ");
+
+            Console.SetCursorPosition(text.Length, Height - 2);
         }
 
         void ChangePanel()
@@ -316,12 +340,5 @@ namespace DotNetTerminal
             Console.ForegroundColor = fg;
         }
 
-        public void write_cmd(string s)
-        {
-            Console.BackgroundColor = ConsoleColor.Black;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.SetCursorPosition(0, Height - 2);
-            Console.Write(s);
-        }
     }
 }

@@ -170,7 +170,11 @@ namespace DotNetTerminal
 
         public void draw()
         {
-            if (!Visible) return;
+            if (!Visible)
+            {
+                clear();
+                return;
+            }
             // fillBackground();
             drawBorders();
             drawHeaders();
@@ -183,6 +187,7 @@ namespace DotNetTerminal
 
         public void drawSelectedFileInfo()
         {
+            if (!visible) return;
             if (!Focused)
             {
                 Console.BackgroundColor = backgroundColor;
@@ -228,6 +233,7 @@ namespace DotNetTerminal
 
         public void drawFile(int index)
         {
+            if (!visible) return;
             if (index == -1 || index >= files.Count) return;
             int max_count = 18; // in column
 
@@ -285,6 +291,7 @@ namespace DotNetTerminal
 
         public bool drawFileBackground(int index)
         {
+            if (!visible) return false;
             int max_count = 18; // in column
             if (index > max_count * 2) return false;
 
@@ -538,7 +545,9 @@ namespace DotNetTerminal
             {
                 System.Diagnostics.Process.Start(file_info.FullName);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) {
+                app.ShowError(ex.Message);
+            }
 
         }
 
@@ -551,7 +560,7 @@ namespace DotNetTerminal
                 System.Diagnostics.Process.Start("notepad", file_info.FullName);
             }
             catch (Exception ex) {
-                app.write_cmd(ex.Message);
+                app.ShowError(ex.Message);
             }
         }
 
@@ -577,7 +586,6 @@ namespace DotNetTerminal
         }
 
         public List<FileSystemInfo> AllFiles { get { return files; } }
-
 
         void SetCursorPosition(int left, int top)
         {
@@ -612,12 +620,15 @@ namespace DotNetTerminal
 
                 if (key == ConsoleKey.Enter)
                 {
+                    Visible = true;
                     changeDirectory(drives[selected_drive]);
+                    draw();
                     break;
                 }
 
                 if (key == ConsoleKey.Escape)
                 {
+                    Visible = true;
                     draw();
                     break;
                 }
