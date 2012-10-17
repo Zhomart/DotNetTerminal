@@ -29,6 +29,8 @@ namespace DotNetTerminal
         ErrorBox large_error_box;
         ErrorBox error_box;
 
+        public bool Running { get; set; }
+
         public char[] chars = new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '\\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ',', '-', '=', '+', ' '};
 
         public Application() 
@@ -67,15 +69,6 @@ namespace DotNetTerminal
             return Console.ReadKey(true);
         }
 
-        public void DrawPanels()
-        {
-            leftPanel.draw();
-            leftPanel.updateSelected();
-
-            rightPanel.draw();
-            rightPanel.updateSelected();
-        }
-
         public void ShowError(string s)
         {
             error_box.run(s);
@@ -83,6 +76,8 @@ namespace DotNetTerminal
 
         void run()
         {
+            Running = true;
+
             leftPanel.Visible = true;
             rightPanel.Visible = true;
 
@@ -274,24 +269,56 @@ namespace DotNetTerminal
             } 
         }
 
+        void DestroyAll()
+        {
+
+            leftPanel = null;
+            rightPanel = null;
+
+            currentPanel = null;
+
+            current_directory = null;
+
+            command = null;
+
+            exit_menu = null;
+            mkdir_menu = null;
+            about_box = null;
+            large_error_box = null;
+            error_box = null;
+        }
+
         public void secureRun()
         {
             while (true)
             {
                 try
                 {
+                    DestroyAll();
                     Init();
                     run();
                 }
                 catch (Exception ex)
                 {
+                    Running = false;
                     large_error_box.run(ex.ToString());
                 }
             }
         }
 
+        public void DrawPanels()
+        {
+            if (!Running) return;
+            leftPanel.draw();
+            leftPanel.updateSelected();
+
+            rightPanel.draw();
+            rightPanel.updateSelected();
+        }
+
         void drawFooterMenu(string key, string text)
         {
+            if (!Running) return;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write(key);
@@ -303,6 +330,7 @@ namespace DotNetTerminal
 
         void drawFooter()
         {
+            if (!Running) return;
             Console.SetCursorPosition(0, Height - 1);
 
             drawFooterMenu("1", "Left  ");
@@ -321,6 +349,7 @@ namespace DotNetTerminal
 
         void draw()
         {
+            if (!Running) return;
             drawFooter();
             DrawPanels();
         }

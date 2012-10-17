@@ -567,20 +567,20 @@ namespace DotNetTerminal
         string formatSize(long size)
         {
             string rr = "B";
-            if (size / 1024 >= 1)
+            if (size / (1024 * 1024 * 1024) >= 1)
             {
-                size /= 1024;
-                rr = "KB";
+                size /= 1024 * 1024 * 1024;
+                rr = "GB";
             }
             else if (size / (1024 * 1024) >= 1)
             {
                 size /= 1024 * 1024;
                 rr = "MB";
             }
-            else if (size / (1024 * 1024 * 1024) >= 1)
+            else if (size > 1024 - 1)
             {
-                size /= 1024 * 1024 * 1024;
-                rr = "GB";
+                size /= 1024;
+                rr = "KB";
             }
             return size + rr;
         }
@@ -642,7 +642,7 @@ namespace DotNetTerminal
             lock (app.locker)
             {
 
-                int w = 30;
+                int w = 34;
                 int h = drives.Length + 4;
 
                 for (int i = 0; i < drives.Length; ++i)
@@ -662,6 +662,30 @@ namespace DotNetTerminal
                     for (int j = 0; j < w - 6; ++j) Console.Write(" ");
                     SetCursorPosition(6, i + Height / 2 - h / 2 + 2);
                     Console.Write(drives[i]);
+
+                    DriveInfo info = new DriveInfo(drives[i]);
+
+                    string total_size = "";
+                    string free_space = "";
+                    string name = "";
+                    int left = 0;
+                    
+                    try {
+                        name = info.DriveType.ToString();
+                        Console.Write("  " + name); left += name.Length;
+                        free_space = formatSize(info.AvailableFreeSpace);
+                        total_size = formatSize(info.TotalSize);
+                        for (int qwe = name.Length; qwe < 9; ++qwe) Console.Write(" ");
+                        Console.Write(total_size);
+                        for (int qwe = name.Length; qwe < 8; ++qwe) Console.Write(" ");
+                        Console.Write(free_space);
+                    }
+                    catch (Exception ex) { 
+                        var drive_info = "Not ready";
+                        for (int qwe = left; qwe < 9; ++qwe) Console.Write(" ");
+                        Console.Write(drive_info);
+                    }
+
                 }
             }
         }
@@ -671,7 +695,7 @@ namespace DotNetTerminal
             lock (app.locker)
             {
 
-                int w = 30;
+                int w = 34;
                 int h = drives.Length + 4;
 
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
