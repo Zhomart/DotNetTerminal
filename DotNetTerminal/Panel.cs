@@ -621,6 +621,11 @@ namespace DotNetTerminal
                 if (key == ConsoleKey.Enter)
                 {
                     Visible = true;
+                    if (app.currentPanel == null)
+                    {
+                        app.currentPanel = this;
+                        Focused = true;
+                    }
                     changeDirectory(drives[selected_drive]);
                     draw();
                     break;
@@ -628,7 +633,6 @@ namespace DotNetTerminal
 
                 if (key == ConsoleKey.Escape)
                 {
-                    Visible = true;
                     draw();
                     break;
                 }

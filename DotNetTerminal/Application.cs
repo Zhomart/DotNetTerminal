@@ -131,8 +131,8 @@ namespace DotNetTerminal
                         leftPanel.SelectDrive();
                         break;
                     case ConsoleKey.F2:
-                        if (key_info.Modifiers == ConsoleModifiers.Alt) { rightPanel.SelectDrive(); continue; }
-                        TogglePanel(rightPanel);
+                        if (key_info.Modifiers == ConsoleModifiers.Control) { TogglePanel(rightPanel); continue; }
+                        rightPanel.SelectDrive();
                         break;
                 }
 
@@ -343,8 +343,6 @@ namespace DotNetTerminal
             drawFooterMenu(" 8", "Find  ");
             drawFooterMenu(" 9", "About ");
             drawFooterMenu(" 10", "Quit ");
-
-
         }
 
         void draw()
