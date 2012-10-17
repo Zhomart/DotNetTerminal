@@ -14,6 +14,8 @@ namespace DotNetTerminal
         public int X { get; set; }
         public int Y { get; set; }
 
+        public string Name { get; set; }
+
         string[] drives;
         int selected_drive;
 
@@ -48,8 +50,8 @@ namespace DotNetTerminal
         public int Height { get { return app.Height - 2; } } // 1 for command line, 1 for tips
 
         List<FileSystemInfo> files;
-        public int selectedIndex = -1;
-        int showStartIndex = 1;
+        public int selectedIndex = 0;
+        int showStartIndex = 0;
 
         Dictionary<string, int> positions;
 
@@ -181,24 +183,28 @@ namespace DotNetTerminal
 
         public void drawSelectedFileInfo()
         {
+            if (!Focused)
+            {
+                Console.BackgroundColor = backgroundColor;
+                SetCursorPosition(1, Height - 2);
+                for (int i = 1; i < Width - 1; ++i) Console.Write(" ");
+                return;
+            }
+            if (selectedIndex == -1) return;
+            if (selectedIndex >= files.Count) return;
+
             lock (app.locker)
             {
-
-                if (selectedIndex == -1) return;
-
-                if (selectedIndex >= files.Count) return;
-
-                var info = new FileInfo(files[selectedIndex].FullName);
-
-
                 Console.BackgroundColor = backgroundColor;
                 Console.ForegroundColor = foregroundColor;
 
                 SetCursorPosition(1, Height - 2);
                 for (int i = 1; i < Width - 1; ++i) Console.Write(" ");
 
+                var info = new FileInfo(files[selectedIndex].FullName);
+
                 SetCursorPosition(1, Height - 2);
-                Console.Write(info.Name);
+                Console.Write(info.Name.Substring(0, Math.Min(info.Name.Length, 20)));
 
                 SetCursorPosition(Width - 16, Height - 2);
                 Console.Write(info.CreationTime.ToString(" dd.MM.yy HH:mm"));
@@ -227,8 +233,6 @@ namespace DotNetTerminal
 
             lock (app.locker)
             {
-
-
                 if (index == selectedIndex && Focused)
                 {
                     Console.BackgroundColor = ConsoleColor.DarkCyan;
@@ -511,10 +515,12 @@ namespace DotNetTerminal
         public void clear()
         {
             Console.BackgroundColor = ConsoleColor.Black;
+            string text = "";
+            for (int j = 0; j < Width; ++j) text += " ";
             for (int i = 0; i < Height; ++i)
             {
                 SetCursorPosition(0, i);
-                for (int j = 0; j < Width; ++j) Console.Write(" ");
+                Console.Write(text);
             }
         }
 

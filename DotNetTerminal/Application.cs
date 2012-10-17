@@ -43,8 +43,8 @@ namespace DotNetTerminal
 
             Console.SetWindowSize(Width, Height);
 
-            leftPanel = new Panel(this, @"C:\soft");
-            rightPanel = new Panel(this, @"C:\");
+            leftPanel = new Panel(this, @"C:\soft"); leftPanel.Name = "l";
+            rightPanel = new Panel(this, @"C:\"); rightPanel.Name = "r";
 
             command = "";
 
@@ -70,13 +70,18 @@ namespace DotNetTerminal
         public void DrawPanels()
         {
             leftPanel.draw();
+            leftPanel.updateSelected();
+
             rightPanel.draw();
+            rightPanel.updateSelected();
         }
 
         void run()
         {
+            leftPanel.Visible = true;
             rightPanel.Visible = true;
-            currentPanel = rightPanel;
+
+            currentPanel = leftPanel;
             currentPanel.Focused = true;
             current_directory = currentPanel.directory;
 
@@ -84,10 +89,11 @@ namespace DotNetTerminal
 
             currentPanel.updateSelected(0);
 
-            Console.SetCursorPosition(0, 0);
-
             while (true)
             {
+                // Scroll up
+                Console.SetCursorPosition(0, 0);
+
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.ForegroundColor = ConsoleColor.White;
 
@@ -146,34 +152,11 @@ namespace DotNetTerminal
                         break;
                     case ConsoleKey.F1:
                         if (key_info.Modifiers == ConsoleModifiers.Alt) leftPanel.SelectDrive();
-                        if (key_info.Modifiers == ConsoleModifiers.Control)
-                        {
-                            leftPanel.Visible = !leftPanel.Visible;
-                            if (currentPanel == leftPanel && !leftPanel.Visible && rightPanel.Visible)
-                            {
-                                currentPanel.Focused = false;
-                                currentPanel = rightPanel;
-                                currentPanel.Focused = true;
-                                currentPanel.updateSelected();
-                            }
-                            leftPanel.draw();
-                        }
+                        if (key_info.Modifiers == ConsoleModifiers.Control) TogglePanel(leftPanel);
                         break;
                     case ConsoleKey.F2:
                         if (key_info.Modifiers == ConsoleModifiers.Alt) rightPanel.SelectDrive();
-                        if (key_info.Modifiers == ConsoleModifiers.Control)
-                        {
-                            rightPanel.Visible = !rightPanel.Visible;
-                            if (currentPanel == rightPanel && !rightPanel.Visible && leftPanel.Visible)
-                            {
-                                currentPanel.Focused = false;
-                                currentPanel = leftPanel;
-                                currentPanel.Focused = true;
-                                currentPanel.updateSelected();
-                            }
-                            else currentPanel = null;
-                            rightPanel.draw();
-                        }
+                        if (key_info.Modifiers == ConsoleModifiers.Control) TogglePanel(rightPanel);
                         break;
                 }
 
@@ -193,7 +176,7 @@ namespace DotNetTerminal
                         break;
                     case ConsoleKey.F5: error_box.run("Not Implemented"); break;
                     case ConsoleKey.F6: error_box.run("Not Implemented"); break;
-                    case ConsoleKey.F7: if (currentPanel != null)mkdir_menu.run(currentPanel.directory); break;
+                    case ConsoleKey.F7: if (currentPanel != null) mkdir_menu.run(currentPanel.directory); break;
                     case ConsoleKey.F8: error_box.run("Not Implemented"); break;
                     case ConsoleKey.F9: about_box.run(); break;
                     case ConsoleKey.UpArrow: currentPanel.selectPrevFile(); break;
@@ -204,30 +187,67 @@ namespace DotNetTerminal
                     case ConsoleKey.PageDown: currentPanel.selectRight(); break;
                     case ConsoleKey.Home: currentPanel.updateSelected(0); break;
                     case ConsoleKey.End: currentPanel.updateSelected(currentPanel.AllFiles.Count - 1); break;
-                    case ConsoleKey.Tab:
-                        if (currentPanel == leftPanel || currentPanel == rightPanel)
-                        {
-                            if (!(currentPanel == leftPanel ? rightPanel : leftPanel).Visible) continue;
-
-                            currentPanel.Focused = false;
-                            currentPanel.updateSelected();
-
-                            currentPanel = currentPanel == leftPanel ? rightPanel : leftPanel;
-
-                            currentPanel.Focused = true;
-                            currentPanel.updateSelected();
-
-                            current_directory = currentPanel.directory;
-                        }
-                        break;
+                    case ConsoleKey.Tab: ChangePanel(); break;
                     case ConsoleKey.Enter:
-                    currentPanel.Action();
-                    current_directory = currentPanel.directory;
-                    write_cmd("                                                  ");
-                    command = "";
+                        currentPanel.Action();
+                        current_directory = currentPanel.directory;
+                        write_cmd("                                                  ");
+                        command = "";
                         break;
                 }
             }
+        }
+
+        void ChangePanel()
+        {
+            if (currentPanel == leftPanel || currentPanel == rightPanel)
+            {
+                if (!otherPanel(currentPanel).Visible) return;
+
+                currentPanel.Focused = false;
+                currentPanel.updateSelected();
+
+                currentPanel = otherPanel(currentPanel);
+
+                currentPanel.Focused = true;
+                currentPanel.updateSelected();
+
+                current_directory = currentPanel.directory;
+            }
+        }
+
+        Panel otherPanel(Panel p)
+        {
+            return p == leftPanel ? rightPanel : leftPanel;
+        }
+
+        void TogglePanel(Panel panel)
+        {
+            if (panel.Visible)
+            {
+                if (currentPanel == panel && otherPanel(panel).Visible)
+                {
+                    currentPanel = otherPanel(panel);
+                    currentPanel.Focused = true;
+                    currentPanel.updateSelected();
+                }
+                else
+                    currentPanel = null;
+
+                panel.Visible = false;
+                panel.Focused = false;
+                panel.clear();
+            }
+            else
+            {
+                if (currentPanel != otherPanel(panel))
+                {
+                    currentPanel = panel;
+                    currentPanel.Focused = true;
+                }
+                panel.Visible = true;
+                panel.draw();
+            } 
         }
 
         public void secureRun()
@@ -278,21 +298,22 @@ namespace DotNetTerminal
         void draw()
         {
             drawFooter();
-
-            leftPanel.draw();
-            // rightPanel.draw();
+            DrawPanels();
         }
 
-
+        int log_lines = 0;
 
         public void log(string s)
         {
+            var bg = Console.BackgroundColor;
+            var fg = Console.ForegroundColor;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.SetCursorPosition(0, Height);
-            Console.Write("                                           ");
-            Console.SetCursorPosition(0, Height);
+            Console.SetCursorPosition(0, Height + log_lines);
             Console.Write(s);
+            log_lines++;
+            Console.BackgroundColor = bg;
+            Console.ForegroundColor = fg;
         }
 
         public void write_cmd(string s)
