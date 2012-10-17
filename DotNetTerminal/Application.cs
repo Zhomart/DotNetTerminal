@@ -43,8 +43,8 @@ namespace DotNetTerminal
 
             Console.SetWindowSize(Width, Height);
 
-            leftPanel = new Panel(this, "C:\\");
-            rightPanel = new Panel(this, "C:\\");
+            leftPanel = new Panel(this, @"C:\soft");
+            rightPanel = new Panel(this, @"C:\");
 
             command = "";
 
@@ -75,7 +75,7 @@ namespace DotNetTerminal
 
         void run()
         {
-            leftPanel.Visible = false;
+            rightPanel.Visible = true;
             currentPanel = rightPanel;
             currentPanel.Focused = true;
             current_directory = currentPanel.directory;
@@ -94,7 +94,7 @@ namespace DotNetTerminal
                 var cdir = current_directory;
                 if (current_directory.Length > 10)
                     cdir = current_directory.Substring(0, 3) + "..." + current_directory.Substring(current_directory.Length - 6, 6);
-                log(cdir + ">");
+                write_cmd(cdir + ">");
                 Console.SetCursorPosition(command.Length + cdir.Length + 1, Height - 2);
 
                 ConsoleKeyInfo key_info = readKey();
@@ -103,14 +103,14 @@ namespace DotNetTerminal
                 if (chars.Contains(key_info.KeyChar))
                 {
                     command += key_info.KeyChar;
-                    log(cdir + ">"+command);
+                    write_cmd(cdir + ">"+command);
                     continue;
                 }
 
                 if (key == ConsoleKey.Backspace && command.Length > 0)
                 {
                     command = command.Substring(0, command.Length - 1);
-                    log(cdir + ">" + command+" ");
+                    write_cmd(cdir + ">" + command+" ");
                     continue;
                 }
 
@@ -137,7 +137,7 @@ namespace DotNetTerminal
                             {
                             }
                             command = "";
-                            log("                                                   ");
+                            write_cmd("                                                   ");
                             continue;
                         }
                         break;
@@ -223,7 +223,7 @@ namespace DotNetTerminal
                     case ConsoleKey.Enter:
                     currentPanel.Action();
                     current_directory = currentPanel.directory;
-                    log("                                                  ");
+                    write_cmd("                                                  ");
                     command = "";
                         break;
                 }
@@ -280,10 +280,22 @@ namespace DotNetTerminal
             drawFooter();
 
             leftPanel.draw();
-            rightPanel.draw();
+            // rightPanel.draw();
         }
 
+
+
         public void log(string s)
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.SetCursorPosition(0, Height);
+            Console.Write("                                           ");
+            Console.SetCursorPosition(0, Height);
+            Console.Write(s);
+        }
+
+        public void write_cmd(string s)
         {
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;

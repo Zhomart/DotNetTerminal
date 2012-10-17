@@ -21,13 +21,28 @@ namespace DotNetTerminal
         ConsoleColor borderColor = ConsoleColor.Cyan;
         ConsoleColor foregroundColor = ConsoleColor.Cyan;
 
-        public bool Visible { get; set; }
+        bool visible;
+
+        public bool Visible { get{return visible;} set {
+            visible = value;
+            if (!visible)
+            {
+                watcher.EnableRaisingEvents = false;
+            }
+            else
+            {
+                watcher.Path = currentDirectory;
+                watcher.EnableRaisingEvents = true;
+            }
+        } }
 
         public bool Focused { get; set; }
 
         int tmp = 0;
 
         string currentDirectory;
+
+        public string directory { get { return currentDirectory; } }
 
         public int Width { get { return app.Width / 2;  } }
         public int Height { get { return app.Height - 2; } } // 1 for command line, 1 for tips
@@ -46,30 +61,36 @@ namespace DotNetTerminal
             X = 0;
             Y = 0;
 
-            Visible = true;
-            Focused = false;
+            visible = false;
 
             positions = new Dictionary<string, int>();
+
+            this.currentDirectory = currentDirectory;
 
             watcher = new FileSystemWatcher();
             watcher.Changed += new FileSystemEventHandler(OnFileEvent);
             watcher.Renamed += new RenamedEventHandler(OnRenameEvent);
+            watcher.Deleted += new FileSystemEventHandler(OnFileEvent);
+            watcher.EnableRaisingEvents = false;
 
             watcher.IncludeSubdirectories = false;
 
-            changeDirectory(currentDirectory);
+            Focused = false;
+
+            this.currentDirectory = currentDirectory;
+            reloadFiles();
         }
 
         public void OnFileEvent(object source, FileSystemEventArgs fsea)
         {
             reloadFiles();
-            draw();
+            if (visible) changeDirectory(currentDirectory);
         }
 
-        public void OnRenameEvent(Object source, RenamedEventArgs rea)
+        public void OnRenameEvent(object source, RenamedEventArgs rea)
         {
             reloadFiles();
-            draw();
+            if (visible) changeDirectory(currentDirectory);
         }
 
         public void sortFiles()
@@ -83,67 +104,6 @@ namespace DotNetTerminal
                         files[i] = files[j];
                         files[j] = tmp;
                     }
-        }
-
-        public void draw()
-        {
-            tmp++;
-            if (!Visible)
-            {
-                clear();
-                return;
-            }
-            fillBackground();
-            drawBorders();
-            drawHeaders();
-
-            drawSelectedFileInfo();
-            drawDirectoryInfo();
-
-            drawCurrentDirectory();
-        }
-
-        public string directory { get { return currentDirectory;  } }
-
-        public void drawSelectedFileInfo()
-        {
-            lock (app.locker)
-            {
-
-                if (selectedIndex == -1) return;
-
-                if (selectedIndex >= files.Count) return;
-
-                var info = new FileInfo(files[selectedIndex].FullName);
-
-
-                Console.BackgroundColor = backgroundColor;
-                Console.ForegroundColor = foregroundColor;
-
-                SetCursorPosition(1, Height - 2);
-                for (int i = 1; i < Width - 1; ++i) Console.Write(" ");
-
-                SetCursorPosition(1, Height - 2);
-                Console.Write(info.Name);
-
-                SetCursorPosition(Width - 16, Height - 2);
-                Console.Write(info.CreationTime.ToString(" dd.MM.yy HH:mm"));
-
-                if (IsDirectory(info))
-                {
-                    string text = " Folder ";
-
-                    SetCursorPosition(Width - 15 - text.Length, Height - 2);
-                    Console.Write(text);
-                }
-                else
-                {
-                    string file_size = formatSize(info.Length);
-
-                    SetCursorPosition(Width - 16 - file_size.Length, Height - 2);
-                    Console.Write(file_size);
-                }
-            }
         }
 
         public bool IsDirectory(object info) 
@@ -206,9 +166,63 @@ namespace DotNetTerminal
             updateSelected(selectedIndex + 18);
         }
 
+        public void draw()
+        {
+            if (!Visible) return;
+            // fillBackground();
+            drawBorders();
+            drawHeaders();
+
+            drawSelectedFileInfo();
+            drawDirectoryInfo();
+
+            drawCurrentDirectory();
+        }
+
+        public void drawSelectedFileInfo()
+        {
+            lock (app.locker)
+            {
+
+                if (selectedIndex == -1) return;
+
+                if (selectedIndex >= files.Count) return;
+
+                var info = new FileInfo(files[selectedIndex].FullName);
+
+
+                Console.BackgroundColor = backgroundColor;
+                Console.ForegroundColor = foregroundColor;
+
+                SetCursorPosition(1, Height - 2);
+                for (int i = 1; i < Width - 1; ++i) Console.Write(" ");
+
+                SetCursorPosition(1, Height - 2);
+                Console.Write(info.Name);
+
+                SetCursorPosition(Width - 16, Height - 2);
+                Console.Write(info.CreationTime.ToString(" dd.MM.yy HH:mm"));
+
+                if (IsDirectory(info))
+                {
+                    string text = " Folder ";
+
+                    SetCursorPosition(Width - 15 - text.Length, Height - 2);
+                    Console.Write(text);
+                }
+                else
+                {
+                    string file_size = formatSize(info.Length);
+
+                    SetCursorPosition(Width - 16 - file_size.Length, Height - 2);
+                    Console.Write(file_size);
+                }
+            }
+        }
+
         public void drawFile(int index)
         {
-            if (index == -1|| index >= files.Count) return;
+            if (index == -1 || index >= files.Count) return;
             int max_count = 18; // in column
 
             lock (app.locker)
@@ -259,13 +273,43 @@ namespace DotNetTerminal
                 }
 
                 SetCursorPosition(left, top);
-                for (int i = 0; i < max_width; ++i) Console.Write(" ");
-
-                SetCursorPosition(left, top);
                 if (name.Length > max_width) name = name.Substring(0, max_width) + "}";
-
+                while (name.Length < max_width) name = name + " ";
                 Console.Write(name);
             }
+        }
+
+        public bool drawFileBackground(int index)
+        {
+            int max_count = 18; // in column
+            if (index > max_count * 2) return false;
+
+            lock (app.locker)
+            {
+                Console.BackgroundColor = backgroundColor;
+             
+                int max_width = 19;
+                int left = 0, top = 0;
+
+                if (index >= max_count)
+                {
+                    max_width = 18;
+                    left = Width / 2 + 1;
+                    top = index - max_count + 2;
+                }
+                else
+                {
+                    left = 1;
+                    top = index + 2;
+                }
+
+                SetCursorPosition(left, top);
+                var name = "";
+                while (name.Length < max_width) name += " ";
+                Console.Write(name);
+
+            }
+            return true;
         }
 
         public void drawCurrentDirectory()
@@ -273,90 +317,11 @@ namespace DotNetTerminal
             int max_count = 18;
             for (int i = showStartIndex; i < Math.Min(files.Count, showStartIndex + max_count * 2); ++i)
                 if (i < Math.Min(files.Count, showStartIndex + max_count * 2) && i >= showStartIndex)
+                {
                     drawFile(i);
-        }
-
-        public void reloadFiles()
-        {
-            DirectoryInfo currentDirectoryInfo = new DirectoryInfo(currentDirectory);
-            files = currentDirectoryInfo.GetFileSystemInfos().ToList();
-            sortFiles();
-            var info = new DirectoryInfo(currentDirectoryInfo.FullName);
-
-            if (info.Parent != null)
-            {
-                files.Insert(0, info.Parent);
-            }
-        }
-
-        public void changeDirectory(string directory_name)
-        {
-            if (!IsDirectory(new FileInfo(directory_name))) return;
-
-            if (currentDirectory != null)
-                positions[currentDirectory] = selectedIndex;
-
-            currentDirectory = directory_name;
-            DirectoryInfo currentDirectoryInfo = new DirectoryInfo(currentDirectory);
-
-            reloadFiles();
-
-            watcher.Path = currentDirectoryInfo.FullName;
-            watcher.EnableRaisingEvents = true;
-
-            if (positions.ContainsKey(currentDirectory))
-            {
-                showStartIndex = 0;
-                updateSelected(positions[currentDirectory]);
-            }
-            else
-            {
-                showStartIndex = 0;
-                updateSelected(0);
-            }
-
-            draw();
-        }
-
-        public void clear()
-        {
-            Console.BackgroundColor = ConsoleColor.Black;
-            for (int i = 0; i < Height; ++i)
-            {
-                SetCursorPosition(0, i);
-                for (int j = 0; j < Width; ++j) Console.Write(" ");
-            }
-        }
-
-        public void Action()
-        {
-            var file_info = files[selectedIndex];
-
-            if (IsDirectory(file_info))
-            {
-                changeDirectory(file_info.FullName);
-                return;
-            }
-
-            try
-            {
-                System.Diagnostics.Process.Start(file_info.FullName);
-            }
-            catch (Exception ex) { }
-
-        }
-
-        public void OpenEdit()
-        {
-            var file_info = files[selectedIndex];
-
-            try
-            {
-                System.Diagnostics.Process.Start("notepad", file_info.FullName);
-            }
-            catch (Exception ex) {
-                app.log(ex.Message);
-            }
+                }
+            for (int i = Math.Min(files.Count, showStartIndex + max_count * 2); i < max_count * 2; ++i)
+                drawFileBackground(i - showStartIndex);
         }
 
         void drawDirectoryInfo()
@@ -373,8 +338,24 @@ namespace DotNetTerminal
 
                 if (name.Length > Width - 2) name = name.Substring(0, Width - 2);
 
-                SetCursorPosition(Math.Max(Width / 2 - name.Length / 2, 0), 0);
+                int nleft = Math.Max(Width / 2 - name.Length / 2, 0);
+                int ntop = 0;
+                SetCursorPosition(nleft, ntop);
                 Console.Write(name);
+
+                Console.BackgroundColor = backgroundColor;
+                Console.ForegroundColor = borderColor;
+
+                for (int i = 1; i < nleft; ++i)
+                {
+                    SetCursorPosition(i, 0);
+                    Console.Write("═");
+                }
+                for (int i = nleft + name.Length; i < Width - 1; ++i)
+                {
+                    SetCursorPosition(i, 0);
+                    Console.Write("═");
+                }
 
                 Console.BackgroundColor = backgroundColor;
                 Console.ForegroundColor = foregroundColor;
@@ -393,8 +374,24 @@ namespace DotNetTerminal
 
                 if (files_info.Length > Width - 2) files_info = files_info.Substring(0, Width - 2);
 
-                SetCursorPosition(Math.Max(Width / 2 - files_info.Length / 2, 0), Height - 1);
+                int left = Math.Max(Width / 2 - files_info.Length / 2, 0);
+                int top = Height - 1;
+                SetCursorPosition(left, top);
                 Console.Write(files_info);
+
+                Console.BackgroundColor = backgroundColor;
+                Console.ForegroundColor = borderColor;
+
+                for (int i = 1; i < left; ++i)
+                {
+                    SetCursorPosition(i, Height - 1);
+                    Console.Write("═");
+                }
+                for (int i = left + files_info.Length; i < Width - 1; ++i)
+                {
+                    SetCursorPosition(i, Height - 1);
+                    Console.Write("═");
+                }
             }
         }
 
@@ -402,35 +399,13 @@ namespace DotNetTerminal
         {
             lock (app.locker)
             {
-
                 Console.ForegroundColor = ConsoleColor.Yellow;
 
-                SetCursorPosition(Width / 4 - 2, 1);
-                Console.Write("Name");
-                SetCursorPosition(3 * Width / 4 - 2, 1);
-                Console.Write("Name");
+                SetCursorPosition(1, 1);
+                Console.Write("        Name       ");
+                SetCursorPosition(Width / 2 + 1, 1);
+                Console.Write("       Name       ");
             }
-        }
-
-        string formatSize(long size)
-        {
-            string rr = "B";
-            if (size / 1024 >= 1)
-            {
-                size /= 1024;
-                rr = "KB";
-            }
-            else if (size / (1024 * 1024) >= 1)
-            {
-                size /= 1024 * 1024;
-                rr = "MB";
-            }
-            else if (size / (1024 * 1024 * 1024) >= 1)
-            {
-                size /= 1024 * 1024 * 1024;
-                rr = "GB";
-            }
-            return size + rr;
         }
 
         void fillBackground()
@@ -443,8 +418,6 @@ namespace DotNetTerminal
                 for (int j = 0; j < Width; ++j) Console.Write(" ");
             }
         }
-
-        public List<FileSystemInfo> AllFiles { get { return files; } }
 
         void drawBorders()
         {
@@ -490,6 +463,115 @@ namespace DotNetTerminal
                 }
             }
         }
+
+        public void reloadFiles()
+        {
+            DirectoryInfo currentDirectoryInfo = new DirectoryInfo(currentDirectory);
+            files = currentDirectoryInfo.GetFileSystemInfos().ToList();
+            sortFiles();
+            var info = new DirectoryInfo(currentDirectoryInfo.FullName);
+
+            if (info.Parent != null)
+            {
+                files.Insert(0, info.Parent);
+            }
+        }
+
+        public void changeDirectory(string directory_name)
+        {
+            if (!IsDirectory(new FileInfo(directory_name))) return;
+
+            if (currentDirectory != null)
+                positions[currentDirectory] = selectedIndex;
+
+            currentDirectory = directory_name;
+            DirectoryInfo currentDirectoryInfo = new DirectoryInfo(currentDirectory);
+
+            reloadFiles();
+
+            watcher.Path = currentDirectoryInfo.FullName;
+
+            if (positions.ContainsKey(currentDirectory))
+            {
+                showStartIndex = 0;
+                updateSelected(positions[currentDirectory]);
+            }
+            else
+            {
+                showStartIndex = 0;
+                updateSelected(0);
+            }
+
+            drawCurrentDirectory();
+            drawDirectoryInfo();
+
+            // draw();
+        }
+
+        public void clear()
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            for (int i = 0; i < Height; ++i)
+            {
+                SetCursorPosition(0, i);
+                for (int j = 0; j < Width; ++j) Console.Write(" ");
+            }
+        }
+
+        public void Action()
+        {
+            var file_info = files[selectedIndex];
+
+            if (IsDirectory(file_info))
+            {
+                changeDirectory(file_info.FullName);
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(file_info.FullName);
+            }
+            catch (Exception ex) { }
+
+        }
+
+        public void OpenEdit()
+        {
+            var file_info = files[selectedIndex];
+
+            try
+            {
+                System.Diagnostics.Process.Start("notepad", file_info.FullName);
+            }
+            catch (Exception ex) {
+                app.write_cmd(ex.Message);
+            }
+        }
+
+        string formatSize(long size)
+        {
+            string rr = "B";
+            if (size / 1024 >= 1)
+            {
+                size /= 1024;
+                rr = "KB";
+            }
+            else if (size / (1024 * 1024) >= 1)
+            {
+                size /= 1024 * 1024;
+                rr = "MB";
+            }
+            else if (size / (1024 * 1024 * 1024) >= 1)
+            {
+                size /= 1024 * 1024 * 1024;
+                rr = "GB";
+            }
+            return size + rr;
+        }
+
+        public List<FileSystemInfo> AllFiles { get { return files; } }
+
 
         void SetCursorPosition(int left, int top)
         {
